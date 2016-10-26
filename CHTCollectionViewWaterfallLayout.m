@@ -441,6 +441,21 @@ static CGFloat CHTFloorCGFloat(CGFloat value) {
     UICollectionViewLayoutAttributes *attr = self.allItemAttributes[i];
     if (CGRectIntersectsRect(rect, attr.frame)) {
       [attrs addObject:attr];
+
+      if (attr.representedElementKind == CHTCollectionElementKindSectionHeader && attr.indexPath.section == 0) {
+        UIEdgeInsets insets = [self.collectionView contentInset];
+        CGPoint offset = [self.collectionView contentOffset];
+        CGFloat minY = -insets.top;
+
+        if (offset.y < minY) {
+          CGFloat deltaY = fabsf(offset.y - minY);
+          CGSize headerSize = [attr bounds].size;
+          CGRect headerRect = [attr frame];
+          headerRect.size.height = MAX(minY, headerSize.height + deltaY);
+          headerRect.origin.y = headerRect.origin.y - deltaY;
+          [attr setFrame:headerRect];
+        }
+      }
     }
   }
 
@@ -448,11 +463,7 @@ static CGFloat CHTFloorCGFloat(CGFloat value) {
 }
 
 - (BOOL)shouldInvalidateLayoutForBoundsChange:(CGRect)newBounds {
-  CGRect oldBounds = self.collectionView.bounds;
-  if (CGRectGetWidth(newBounds) != CGRectGetWidth(oldBounds)) {
-    return YES;
-  }
-  return NO;
+  return YES;
 }
 
 #pragma mark - Private Methods
